@@ -30,14 +30,20 @@ def _ensure_env_loaded() -> None:
         os.environ.setdefault("SQL_PASSWORD", st.secrets["SQL_PASSWORD"])
     elif "SQL_SERVER" not in os.environ:
         load_dotenv(ENV_PATH)
-    os.environ.setdefault("ODBCINSTINI", ODBCINST_PATH)
+    if os.path.exists(ODBCINST_PATH):
+        os.environ.setdefault("ODBCINSTINI", ODBCINST_PATH)
 
 
 def _get_connection() -> pyodbc.Connection:
     """Create a pyodbc connection using the bundled driver."""
     _ensure_env_loaded()
+    driver_path = os.environ.get("ODBC_DRIVER_PATH", ODBC_DRIVER)
+    if driver_path and os.path.exists(driver_path):
+        driver_str = f"DRIVER={driver_path};"
+    else:
+        driver_str = "DRIVER={ODBC Driver 18 for SQL Server};"
     connection_string = (
-        f"DRIVER={ODBC_DRIVER};"
+        f"{driver_str}"
         f"SERVER={os.environ['SQL_SERVER']};"
         f"DATABASE={os.environ['SQL_DATABASE']};"
         f"UID={os.environ['SQL_USERNAME']};"

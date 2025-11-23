@@ -346,6 +346,21 @@ def main() -> None:
     print(result.head())
     print(result.tail())
 
+    series_df = pd.DataFrame(index=portfolio.index)
+    series_df["ModelPortfolioIndex"] = portfolio["PortfolioIndex"]
+    series_df["OriginalPortfolioIndex"] = baseline_portfolio.reindex(portfolio.index)[
+        "PortfolioIndex"
+    ]
+    vn_aligned = vnindex.reindex(portfolio.index).ffill()
+    if not vn_aligned.empty:
+        base_val = vn_aligned["INDEXVALUE"].iloc[0]
+        series_df["VNINDEX"] = vn_aligned["INDEXVALUE"] / base_val * 100
+    series_output = analysis_dir / "mp_model_daily_series.csv"
+    series_df.reset_index().rename(columns={"TRADE_DATE": "TRADE_DATE"}).to_csv(
+        series_output, index=False
+    )
+    print(f"Saved series data to {series_output}")
+
 
 if __name__ == "__main__":
     main()
